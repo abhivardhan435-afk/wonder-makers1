@@ -200,12 +200,47 @@ export default function ThreeDBackground() {
         const widthRange = isDark ? 2.0 : 2.2;
         const lineWidth = baseWidth + depthPct * widthRange;
 
-        // Draw solid bright red edge (no ambient glows, no metallic chrome shaders)
+        // Stroke 1: Ambient Reflection / Outer Glow (Wide & vibrant glow halo)
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = `rgba(255, 45, 55, ${opacity})`;
+        ctx.lineWidth = lineWidth + 7.0; // Increased width for richer glow
+        ctx.strokeStyle = isDark 
+          ? `rgba(255, 60, 65, ${opacity * 0.48})` // Increased brightness and opacity to match lime green
+          : `rgba(255, 60, 65, ${opacity * 0.45})`;
+        ctx.stroke();
+
+        // Stroke 2: Metallic Chrome Body (Linear gradient with terminator line)
+        const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+        if (isDark) {
+          grad.addColorStop(0, `rgba(75, 8, 10, ${opacity * 0.8})`);
+          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
+          grad.addColorStop(0.55, `rgba(40, 4, 6, ${opacity * 0.8})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(1, `rgba(75, 8, 10, ${opacity * 0.8})`);
+        } else {
+          grad.addColorStop(0, `rgba(90, 10, 12, ${opacity * 0.95})`);
+          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
+          grad.addColorStop(0.55, `rgba(50, 5, 8, ${opacity * 0.95})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(1, `rgba(90, 10, 12, ${opacity * 0.95})`);
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = lineWidth + 0.8;
+        ctx.strokeStyle = grad;
+        ctx.stroke();
+
+        // Stroke 3: Specular core line (Ultra-thin white reflect line)
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = lineWidth * 0.35;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
         ctx.stroke();
       };
 
@@ -217,10 +252,41 @@ export default function ThreeDBackground() {
         const opacityRange = isDark ? 0.20 : 0.10;
         const opacity = baseOpacity + depthPct * opacityRange;
 
-        // Draw solid bright red node (no glows, no complex metallic gradients)
+        // Draw soft ambient vector glow behind node
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius * (isDark ? 2.5 : 2.0), 0, Math.PI * 2);
+        ctx.fillStyle = isDark
+          ? `rgba(255, 60, 65, ${opacity * 0.60})`
+          : `rgba(255, 60, 65, ${opacity * 0.48})`;
+        ctx.fill();
+
+        // Draw metallic chrome node
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 45, 55, ${opacity})`;
+
+        // Shift radial gradient center slightly top-left for glossy light source offset
+        const radGrad = ctx.createRadialGradient(
+          p.x - radius * 0.28, p.y - radius * 0.28, radius * 0.05,
+          p.x, p.y, radius
+        );
+        
+        if (isDark) {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
+          radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // specular rim
+          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
+          radGrad.addColorStop(0.55, `rgba(50, 5, 8, ${opacity * 0.95})`); // dark horizon reflection terminator
+          radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
+          radGrad.addColorStop(1, `rgba(30, 2, 3, ${opacity})`); // deep shadow edge
+        } else {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
+          radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // slightly darker red-white rim
+          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
+          radGrad.addColorStop(0.55, `rgba(60, 6, 10, ${opacity * 0.95})`); // dark horizon reflection terminator
+          radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
+          radGrad.addColorStop(1, `rgba(40, 4, 6, ${opacity})`); // deep shadow edge
+        }
+
+        ctx.fillStyle = radGrad;
         ctx.fill();
       };
 
@@ -237,13 +303,13 @@ export default function ThreeDBackground() {
         ctx.arc(cx, cy, coreRadius * 2.6, 0, Math.PI * 2);
         let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.6);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 45, 55, ${0.28 * currentGlowOpacity})`);
-          grad.addColorStop(0.5, `rgba(255, 45, 55, ${0.08 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+          grad.addColorStop(0, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
+          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.12 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         } else {
-          grad.addColorStop(0, `rgba(225, 25, 38, ${0.25 * currentGlowOpacity})`);
-          grad.addColorStop(0.5, `rgba(225, 25, 38, ${0.08 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(225, 25, 38, 0)');
+          grad.addColorStop(0, `rgba(255, 60, 65, ${0.32 * currentGlowOpacity})`);
+          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.10 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
@@ -253,15 +319,15 @@ export default function ThreeDBackground() {
         ctx.arc(cx, cy, coreRadius * 1.3, 0, Math.PI * 2);
         grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 1.3);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 45, 55, ${0.55 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(255, 45, 55, ${0.35 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(255, 45, 55, ${0.12 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+          grad.addColorStop(0, `rgba(255, 60, 65, ${0.65 * currentGlowOpacity})`);
+          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.45 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.18 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         } else {
-          grad.addColorStop(0, `rgba(225, 25, 38, ${0.55 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(225, 25, 38, ${0.35 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(225, 25, 38, ${0.12 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(225, 25, 38, 0)');
+          grad.addColorStop(0, `rgba(255, 60, 65, ${0.55 * currentGlowOpacity})`);
+          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.15 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
@@ -273,13 +339,13 @@ export default function ThreeDBackground() {
         if (isDark) {
           grad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * currentGlowOpacity})`);
           grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.80 * currentGlowOpacity})`);
-          grad.addColorStop(0.8, `rgba(255, 45, 55, ${0.30 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+          grad.addColorStop(0.8, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         } else {
           grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * currentGlowOpacity})`);
           grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.75 * currentGlowOpacity})`);
-          grad.addColorStop(0.8, `rgba(225, 25, 38, ${0.25 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(225, 25, 38, 0)');
+          grad.addColorStop(0.8, `rgba(255, 60, 65, ${0.32 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
@@ -334,8 +400,8 @@ export default function ThreeDBackground() {
         if (edge.avgZ < 0) drawEdge(edge);
       });
 
-      // 4. Draw Glowing Center Core (z = 0) - Disabled to remove neon elements
-      // drawGlowingCore(centerX, centerY, focalLength);
+      // 4. Draw Glowing Center Core (z = 0)
+      drawGlowingCore(centerX, centerY, focalLength);
 
       // 5. Draw closest edges (avgZ >= 0)
       edgeData.forEach((edge) => {
