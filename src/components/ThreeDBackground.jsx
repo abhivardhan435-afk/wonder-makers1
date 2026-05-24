@@ -204,27 +204,27 @@ export default function ThreeDBackground() {
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth + 7.0; // Increased width for richer glow
+        ctx.lineWidth = lineWidth + 12.0; // Max glow width
         ctx.strokeStyle = isDark 
-          ? `rgba(255, 60, 65, ${opacity * 0.48})` // Increased brightness and opacity to match lime green
-          : `rgba(255, 60, 65, ${opacity * 0.45})`;
+          ? `rgba(255, 0, 50, ${opacity * 0.88})` // Max brightness and opacity
+          : `rgba(255, 0, 50, ${opacity * 0.80})`;
         ctx.stroke();
 
         // Stroke 2: Metallic Chrome Body (Linear gradient with terminator line)
         const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
         if (isDark) {
           grad.addColorStop(0, `rgba(75, 8, 10, ${opacity * 0.8})`);
-          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.22, `rgba(255, 0, 50, ${opacity})`);
           grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
           grad.addColorStop(0.55, `rgba(40, 4, 6, ${opacity * 0.8})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.78, `rgba(255, 0, 50, ${opacity})`);
           grad.addColorStop(1, `rgba(75, 8, 10, ${opacity * 0.8})`);
         } else {
           grad.addColorStop(0, `rgba(90, 10, 12, ${opacity * 0.95})`);
-          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.22, `rgba(255, 0, 50, ${opacity})`);
           grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
           grad.addColorStop(0.55, `rgba(50, 5, 8, ${opacity * 0.95})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
+          grad.addColorStop(0.78, `rgba(255, 0, 50, ${opacity})`);
           grad.addColorStop(1, `rgba(90, 10, 12, ${opacity * 0.95})`);
         }
 
@@ -254,10 +254,10 @@ export default function ThreeDBackground() {
 
         // Draw soft ambient vector glow behind node
         ctx.beginPath();
-        ctx.arc(p.x, p.y, radius * (isDark ? 2.5 : 2.0), 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, radius * 4.0, 0, Math.PI * 2); // Expanded node glow radius
         ctx.fillStyle = isDark
-          ? `rgba(255, 60, 65, ${opacity * 0.60})`
-          : `rgba(255, 60, 65, ${opacity * 0.48})`;
+          ? `rgba(255, 0, 50, ${opacity * 0.92})` // Max brightness and opacity
+          : `rgba(255, 0, 50, ${opacity * 0.85})`;
         ctx.fill();
 
         // Draw metallic chrome node
@@ -273,14 +273,14 @@ export default function ThreeDBackground() {
         if (isDark) {
           radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
           radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // specular rim
-          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
+          radGrad.addColorStop(0.35, `rgba(255, 0, 50, ${opacity * 0.95})`); // bright red body
           radGrad.addColorStop(0.55, `rgba(50, 5, 8, ${opacity * 0.95})`); // dark horizon reflection terminator
           radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
           radGrad.addColorStop(1, `rgba(30, 2, 3, ${opacity})`); // deep shadow edge
         } else {
           radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
           radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // slightly darker red-white rim
-          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
+          radGrad.addColorStop(0.35, `rgba(255, 0, 50, ${opacity * 0.95})`); // bright red body
           radGrad.addColorStop(0.55, `rgba(60, 6, 10, ${opacity * 0.95})`); // dark horizon reflection terminator
           radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
           radGrad.addColorStop(1, `rgba(40, 4, 6, ${opacity})`); // deep shadow edge
@@ -296,20 +296,20 @@ export default function ThreeDBackground() {
 
         // Pulse breathing effect based on timestamp
         const pulse = 1 + Math.sin(time * 0.003) * 0.08;
-        const coreRadius = focal * 0.25 * pulse;
+        const coreRadius = focal * 0.52 * pulse; // Doubled center glowing core size
         
         // Layer 1: Outer soft ambient glow (wide, low opacity)
         ctx.beginPath();
         ctx.arc(cx, cy, coreRadius * 2.6, 0, Math.PI * 2);
         let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.6);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
-          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.12 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 0, 50, ${0.80 * currentGlowOpacity})`); // Boosted outer glow opacity
+          grad.addColorStop(0.5, `rgba(255, 0, 50, ${0.30 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         } else {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.32 * currentGlowOpacity})`);
-          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.10 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 0, 50, ${0.70 * currentGlowOpacity})`);
+          grad.addColorStop(0.5, `rgba(255, 0, 50, ${0.25 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
@@ -319,15 +319,15 @@ export default function ThreeDBackground() {
         ctx.arc(cx, cy, coreRadius * 1.3, 0, Math.PI * 2);
         grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 1.3);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.65 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.45 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.18 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 0, 50, ${0.98 * currentGlowOpacity})`); // Max core opacity
+          grad.addColorStop(0.3, `rgba(255, 0, 50, ${0.70 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 0, 50, ${0.35 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         } else {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.55 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.15 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 0, 50, ${0.90 * currentGlowOpacity})`);
+          grad.addColorStop(0.3, `rgba(255, 0, 50, ${0.60 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 0, 50, ${0.30 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
@@ -337,15 +337,15 @@ export default function ThreeDBackground() {
         ctx.arc(cx, cy, coreRadius * 0.45, 0, Math.PI * 2);
         grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 0.45);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * currentGlowOpacity})`);
-          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.80 * currentGlowOpacity})`);
-          grad.addColorStop(0.8, `rgba(255, 60, 65, ${0.38 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 255, 255, ${1.0 * currentGlowOpacity})`);
+          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.90 * currentGlowOpacity})`);
+          grad.addColorStop(0.85, `rgba(255, 0, 50, ${0.60 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         } else {
-          grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * currentGlowOpacity})`);
-          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.75 * currentGlowOpacity})`);
-          grad.addColorStop(0.8, `rgba(255, 60, 65, ${0.32 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          grad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * currentGlowOpacity})`);
+          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.85 * currentGlowOpacity})`);
+          grad.addColorStop(0.85, `rgba(255, 0, 50, ${0.50 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 0, 50, 0)');
         }
         ctx.fillStyle = grad;
         ctx.fill();
