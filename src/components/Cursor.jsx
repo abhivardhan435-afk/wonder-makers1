@@ -57,8 +57,8 @@ export default function Cursor() {
         gsap.to(ringRef.current, {
           width: 56,
           height: 56,
-          backgroundColor: 'rgba(186, 255, 57, 0.15)',
-          borderColor: 'rgba(186, 255, 57, 1)',
+          backgroundColor: 'rgba(255, 45, 55, 0.15)',
+          borderColor: 'rgba(255, 45, 55, 1)',
           duration: 0.3,
           ease: 'power2.out'
         });
@@ -83,7 +83,7 @@ export default function Cursor() {
           width: 32,
           height: 32,
           backgroundColor: 'transparent',
-          borderColor: 'rgba(186, 255, 57, 0.5)',
+          borderColor: 'rgba(255, 45, 55, 0.5)',
           duration: 0.3,
           ease: 'power2.out'
         });

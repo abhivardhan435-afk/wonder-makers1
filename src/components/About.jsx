@@ -21,47 +21,67 @@ export default function About() {
     const activeTriggers = [];
 
     // Section Label Entrance & Exit
-    const labelTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: labelRef.current,
-        start: 'top bottom-=20',
-        end: 'bottom top+=20',
-        scrub: 0.8,
+    const labelTrigger = ScrollTrigger.create({
+      trigger: labelRef.current,
+      start: 'top bottom-=20',
+      end: 'bottom top+=20',
+      onEnter: () => {
+        gsap.fromTo(labelRef.current, 
+          { y: 35, opacity: 0 }, 
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+        );
+      },
+      onLeave: () => {
+        gsap.to(labelRef.current, 
+          { y: -35, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+        );
+      },
+      onEnterBack: () => {
+        gsap.fromTo(labelRef.current, 
+          { y: 35, opacity: 0 }, 
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+        );
+      },
+      onLeaveBack: () => {
+        gsap.to(labelRef.current, 
+          { y: 35, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+        );
       }
     });
-
-    labelTl.fromTo(labelRef.current,
-      { y: 35, opacity: 0 },
-      { y: 0, opacity: 1, ease: 'power2.out', duration: 0.4 }
-    )
-    .to(labelRef.current,
-      { y: -35, opacity: 0, ease: 'power2.in', duration: 0.4 },
-      '+=0.2'
-    );
     
-    if (labelTl.scrollTrigger) activeTriggers.push(labelTl.scrollTrigger);
+    activeTriggers.push(labelTrigger);
 
     // Scroll triggered entrance & exit for cards
     cardRefs.current.forEach((card) => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: card,
-          start: 'top bottom-=50',
-          end: 'bottom top+=50',
-          scrub: 0.8,
+      const trigger = ScrollTrigger.create({
+        trigger: card,
+        start: 'top bottom-=50',
+        end: 'bottom top+=50',
+        onEnter: () => {
+          gsap.fromTo(card, 
+            { y: 50, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+          );
+        },
+        onLeave: () => {
+          gsap.to(card, 
+            { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+          );
+        },
+        onEnterBack: () => {
+          gsap.fromTo(card, 
+            { y: 50, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+          );
+        },
+        onLeaveBack: () => {
+          gsap.to(card, 
+            { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+          );
         }
       });
 
-      tl.fromTo(card,
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, ease: 'power2.out', duration: 0.4 }
-      )
-      .to(card,
-        { y: -60, opacity: 0, ease: 'power2.in', duration: 0.4 },
-        '+=0.2'
-      );
-
-      if (tl.scrollTrigger) activeTriggers.push(tl.scrollTrigger);
+      activeTriggers.push(trigger);
     });
 
     return () => {
@@ -85,7 +105,7 @@ export default function About() {
       rotationX: -yc * 12,
       scale: 1.03,
       boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-      borderColor: 'rgba(186, 255, 57, 0.4)',
+      borderColor: 'rgba(255, 45, 55, 0.4)',
       ease: 'power1.out',
       duration: 0.3
     });

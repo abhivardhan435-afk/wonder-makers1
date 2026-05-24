@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-neon: hsl(74, 100%, 60%);
-  --color-neon-hover: hsl(74, 100%, 48%);
-  --color-neon-glow: rgba(186, 255, 57, 0.15);
+  --color-neon: hsl(358, 99%, 55%);
+  --color-neon-hover: hsl(358, 99%, 45%);
+  --color-neon-glow: rgba(255, 45, 55, 0.15);
   
   --font-display: "Outfit", sans-serif;
   --font-sans: "Inter", sans-serif;
@@ -19,7 +19,14 @@
     font-family: var(--font-sans);
     cursor: none; /* Hide default cursor for custom cursor experience */
     overflow-x: hidden;
+    background-color: #ffffff;
+    color: #000000;
     transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark body {
+    background-color: #000000;
+    color: #ffffff;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -127,7 +134,8 @@ html.lenis body {
     linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px);
 }
 
-/* Glow gradient mesh background */
+/* Glow gradient mesh background - Red & White Neon */
 .radial-mesh {
-  background-image: radial-gradient(circle at 50% 50%, var(--color-neon-glow) 0%, transparent 60%);
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 45, 55, 0.08) 35%, transparent 70%);
 }

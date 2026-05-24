@@ -104,7 +104,7 @@ export default function Hero({ isLoaded }) {
               High-end design.
             </span>
           </div>
-          <div className="text-mask block py-1 overflow-hidden text-lime-600 dark:text-neon">
+          <div className="text-mask block py-1 overflow-hidden text-red-600 dark:text-neon">
             <span 
               ref={el => titleLinesRef.current[1] = el}
               className="text-mask-inner block translate-y-[105%]"

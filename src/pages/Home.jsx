@@ -1,20 +1,12 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import About from '../components/About';
 import Services from '../components/Services';
-import ThreeDBackground from '../components/ThreeDBackground';
 import Work from '../components/Work';
 
 export default function Home({ isLoaded }) {
   return (
-    <div className="relative min-h-screen bg-white dark:bg-black w-full text-black dark:text-white transition-theme">
-      {/* Fixed 3D Wireframe Shape Layer */}
-      <ThreeDBackground />
-
-      {/* Dynamic Navbar */}
-      <Navbar isLoaded={isLoaded} />
-      
+    <div className="relative min-h-screen w-full transition-theme bg-transparent">
       {/* Interactive Main Sections */}
       <main className="relative z-10">
         {/* Section 1: Hero */}

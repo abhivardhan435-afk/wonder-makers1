@@ -99,12 +99,13 @@ export default function ThreeDBackground() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Initial rotation angles
+    // Initial rotation angles and theme tracking
     let angleX = 0;
     let angleY = 0;
     let angleZ = 0;
 
     const cameraDist = 3.0;
+    let currentGlowOpacity = document.documentElement.classList.contains('dark') ? 1.0 : 0.0;
 
     // Render loop
     const render = (time) => {
@@ -112,6 +113,10 @@ export default function ThreeDBackground() {
 
       // Check current theme
       const isDark = document.documentElement.classList.contains('dark');
+
+      // Smoothly LERP glow opacity based on active theme
+      const targetGlowOpacity = isDark ? 1.0 : 0.0;
+      currentGlowOpacity += (targetGlowOpacity - currentGlowOpacity) * 0.08;
 
       // Only scroll-linked rotation (no idle rotation, no mouse rotation)
       angleX = scrollProgress.current.value * Math.PI * 2.5;
@@ -170,17 +175,180 @@ export default function ThreeDBackground() {
           const grad = ctx.createRadialGradient(px, py, 0, px, py, currentSize);
           if (isDark) {
             grad.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity})`);
-            grad.addColorStop(0.35, `rgba(186, 255, 57, ${currentOpacity * 0.85})`);
-            grad.addColorStop(1, 'rgba(186, 255, 57, 0)');
+            grad.addColorStop(0.35, `rgba(255, 45, 55, ${currentOpacity * 0.85})`);
+            grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
           } else {
             grad.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity})`);
-            grad.addColorStop(0.35, `rgba(130, 210, 0, ${currentOpacity * 0.85})`);
-            grad.addColorStop(1, 'rgba(130, 210, 0, 0)');
+            grad.addColorStop(0.35, `rgba(255, 45, 55, ${currentOpacity * 0.85})`);
+            grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
           }
 
           ctx.fillStyle = grad;
           ctx.fill();
         });
+      };
+
+      // Helper to draw a single edge
+      const drawEdge = ({ p1, p2, avgZ }) => {
+        const depthPct = (avgZ + 1.0) / 2.0; // 0 to 1
+        
+        const baseOpacity = isDark ? 0.60 : 0.85;
+        const opacityRange = isDark ? 0.40 : 0.15;
+        const opacity = baseOpacity + depthPct * opacityRange;
+
+        const baseWidth = isDark ? 1.0 : 1.8;
+        const widthRange = isDark ? 2.0 : 2.2;
+        const lineWidth = baseWidth + depthPct * widthRange;
+
+        // Stroke 1: Ambient Reflection / Outer Glow (Wide & vibrant glow halo)
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = lineWidth + 5.0;
+        ctx.strokeStyle = isDark 
+          ? `rgba(255, 45, 55, ${opacity * 0.32})` 
+          : `rgba(255, 45, 55, ${opacity * 0.50})`;
+        ctx.stroke();
+
+        // Stroke 2: Metallic Chrome Body (Linear gradient with terminator line)
+        const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+        if (isDark) {
+          grad.addColorStop(0, `rgba(55, 6, 8, ${opacity * 0.8})`);
+          grad.addColorStop(0.22, `rgba(255, 45, 55, ${opacity})`);
+          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
+          grad.addColorStop(0.55, `rgba(30, 3, 4, ${opacity * 0.8})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 45, 55, ${opacity})`);
+          grad.addColorStop(1, `rgba(55, 6, 8, ${opacity * 0.8})`);
+        } else {
+          grad.addColorStop(0, `rgba(230, 70, 80, ${opacity * 0.95})`);
+          grad.addColorStop(0.22, `rgba(255, 45, 55, ${opacity * 1.0})`);
+          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity * 1.0})`); // Specular highlight
+          grad.addColorStop(0.55, `rgba(180, 40, 50, ${opacity * 0.95})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 45, 55, ${opacity * 1.0})`);
+          grad.addColorStop(1, `rgba(230, 70, 80, ${opacity * 0.95})`);
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = lineWidth + 0.8;
+        ctx.strokeStyle = grad;
+        ctx.stroke();
+
+        // Stroke 3: Specular core line (Ultra-thin white reflect line)
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = lineWidth * 0.35;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.stroke();
+      };
+
+      // Helper to draw a single node (vertex)
+      const drawNode = (p) => {
+        const depthPct = (p.z + 1.0) / 2.0;
+        const radius = isDark ? (4.0 + depthPct * 4.5) : (4.5 + depthPct * 5.0);
+        const baseOpacity = isDark ? 0.80 : 0.90;
+        const opacityRange = isDark ? 0.20 : 0.10;
+        const opacity = baseOpacity + depthPct * opacityRange;
+
+        // Draw soft ambient vector glow behind node
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius * (isDark ? 2.5 : 2.0), 0, Math.PI * 2);
+        ctx.fillStyle = isDark
+          ? `rgba(255, 45, 55, ${opacity * 0.45})`
+          : `rgba(255, 45, 55, ${opacity * 0.60})`;
+        ctx.fill();
+
+        // Draw metallic chrome node
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+
+        // Shift radial gradient center slightly top-left for glossy light source offset
+        const radGrad = ctx.createRadialGradient(
+          p.x - radius * 0.28, p.y - radius * 0.28, radius * 0.05,
+          p.x, p.y, radius
+        );
+        
+        if (isDark) {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
+          radGrad.addColorStop(0.15, `rgba(255, 210, 215, ${opacity})`); // specular rim
+          radGrad.addColorStop(0.35, `rgba(255, 45, 55, ${opacity * 0.95})`); // metallic green body
+          radGrad.addColorStop(0.55, `rgba(40, 5, 6, ${opacity * 0.95})`); // dark horizon reflection terminator
+          radGrad.addColorStop(0.8, `rgba(255, 100, 110, ${opacity * 0.85})`); // bounce reflection
+          radGrad.addColorStop(1, `rgba(20, 2, 3, ${opacity})`); // deep shadow edge
+        } else {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity * 1.0})`);
+          radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity * 1.0})`);
+          radGrad.addColorStop(0.35, `rgba(255, 45, 55, ${opacity * 1.0})`);
+          radGrad.addColorStop(0.55, `rgba(180, 50, 60, ${opacity * 0.95})`);
+          radGrad.addColorStop(0.8, `rgba(255, 100, 110, ${opacity * 0.90})`);
+          radGrad.addColorStop(1, `rgba(100, 25, 30, ${opacity * 1.0})`);
+        }
+
+        ctx.fillStyle = radGrad;
+        ctx.fill();
+      };
+
+      // Helper to draw glowing core inside shape
+      const drawGlowingCore = (cx, cy, focal) => {
+        if (currentGlowOpacity < 0.01) return;
+
+        // Pulse breathing effect based on timestamp
+        const pulse = 1 + Math.sin(time * 0.003) * 0.08;
+        const coreRadius = focal * 0.25 * pulse;
+        
+        // Layer 1: Outer soft ambient glow (wide, low opacity)
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreRadius * 2.6, 0, Math.PI * 2);
+        let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.6);
+        if (isDark) {
+          grad.addColorStop(0, `rgba(255, 45, 55, ${0.28 * currentGlowOpacity})`);
+          grad.addColorStop(0.5, `rgba(255, 45, 55, ${0.08 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        } else {
+          grad.addColorStop(0, `rgba(255, 45, 55, ${0.20 * currentGlowOpacity})`);
+          grad.addColorStop(0.5, `rgba(255, 45, 55, ${0.06 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Layer 2: Medium glow body (intense color)
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreRadius * 1.3, 0, Math.PI * 2);
+        grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 1.3);
+        if (isDark) {
+          grad.addColorStop(0, `rgba(255, 45, 55, ${0.55 * currentGlowOpacity})`);
+          grad.addColorStop(0.3, `rgba(255, 45, 55, ${0.35 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 45, 55, ${0.12 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        } else {
+          grad.addColorStop(0, `rgba(255, 45, 55, ${0.45 * currentGlowOpacity})`);
+          grad.addColorStop(0.3, `rgba(255, 45, 55, ${0.30 * currentGlowOpacity})`);
+          grad.addColorStop(0.7, `rgba(255, 45, 55, ${0.10 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Layer 3: Specular bright center core (white-hot center)
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreRadius * 0.45, 0, Math.PI * 2);
+        grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 0.45);
+        if (isDark) {
+          grad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * currentGlowOpacity})`);
+          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.80 * currentGlowOpacity})`);
+          grad.addColorStop(0.8, `rgba(255, 45, 55, ${0.30 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        } else {
+          grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * currentGlowOpacity})`);
+          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.75 * currentGlowOpacity})`);
+          grad.addColorStop(0.8, `rgba(255, 45, 55, ${0.20 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
       };
 
       // 1. Draw Background Particles (submerged deep behind shape)
@@ -222,109 +390,30 @@ export default function ThreeDBackground() {
       // Sort edges: draw furthest edges first, closest edges last
       edgeData.sort((a, b) => a.avgZ - b.avgZ);
 
-      // 2. Render sorted edges as linear metallic chrome gradients
-      edgeData.forEach(({ p1, p2, avgZ }) => {
-        const depthPct = (avgZ + 1.0) / 2.0; // 0 to 1
-        
-        const baseOpacity = isDark ? 0.60 : 0.85;
-        const opacityRange = isDark ? 0.40 : 0.15;
-        const opacity = baseOpacity + depthPct * opacityRange;
-
-        const baseWidth = isDark ? 1.0 : 1.8;
-        const widthRange = isDark ? 2.0 : 2.2;
-        const lineWidth = baseWidth + depthPct * widthRange;
-
-        // Stroke 1: Ambient Reflection / Outer Glow (Wide & vibrant glow halo)
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth + 5.0;
-        ctx.strokeStyle = isDark 
-          ? `rgba(186, 255, 57, ${opacity * 0.32})` 
-          : `rgba(130, 210, 0, ${opacity * 0.22})`;
-        ctx.stroke();
-
-        // Stroke 2: Metallic Chrome Body (Linear gradient with terminator line)
-        const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-        if (isDark) {
-          grad.addColorStop(0, `rgba(12, 50, 4, ${opacity * 0.8})`);
-          grad.addColorStop(0.22, `rgba(186, 255, 57, ${opacity})`);
-          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
-          grad.addColorStop(0.55, `rgba(6, 25, 2, ${opacity * 0.8})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(186, 255, 57, ${opacity})`);
-          grad.addColorStop(1, `rgba(12, 50, 4, ${opacity * 0.8})`);
-        } else {
-          grad.addColorStop(0, `rgba(20, 70, 15, ${opacity * 0.8})`);
-          grad.addColorStop(0.22, `rgba(130, 210, 0, ${opacity})`);
-          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
-          grad.addColorStop(0.55, `rgba(10, 40, 5, ${opacity * 0.8})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(130, 210, 0, ${opacity})`);
-          grad.addColorStop(1, `rgba(20, 70, 15, ${opacity * 0.8})`);
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth + 0.8;
-        ctx.strokeStyle = grad;
-        ctx.stroke();
-
-        // Stroke 3: Specular core line (Ultra-thin white reflect line)
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth * 0.35;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.stroke();
-      });
-
-      // 3. Render vertices (nodes) with 3D radial chrome sphere gradients and secondary vector glow
+      // 2. Draw furthest nodes (z < 0)
       projected.forEach((p) => {
-        const depthPct = (p.z + 1.0) / 2.0;
-        const radius = isDark ? (4.0 + depthPct * 4.5) : (4.5 + depthPct * 5.0);
-        const baseOpacity = isDark ? 0.80 : 0.90;
-        const opacityRange = isDark ? 0.20 : 0.10;
-        const opacity = baseOpacity + depthPct * opacityRange;
-
-        // Draw soft ambient vector glow behind node (replaces heavy shadowBlur, boosted for brightness)
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, radius * (isDark ? 2.5 : 2.0), 0, Math.PI * 2);
-        ctx.fillStyle = isDark
-          ? `rgba(186, 255, 57, ${opacity * 0.45})`
-          : `rgba(130, 210, 0, ${opacity * 0.32})`;
-        ctx.fill();
-
-        // Draw metallic chrome node
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-
-        // Shift radial gradient center slightly top-left for glossy light source offset
-        const radGrad = ctx.createRadialGradient(
-          p.x - radius * 0.28, p.y - radius * 0.28, radius * 0.05,
-          p.x, p.y, radius
-        );
-        
-        if (isDark) {
-          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
-          radGrad.addColorStop(0.15, `rgba(225, 255, 150, ${opacity})`); // specular rim
-          radGrad.addColorStop(0.35, `rgba(186, 255, 57, ${opacity * 0.95})`); // metallic green body
-          radGrad.addColorStop(0.55, `rgba(10, 42, 5, ${opacity * 0.95})`); // dark horizon reflection terminator
-          radGrad.addColorStop(0.8, `rgba(145, 230, 30, ${opacity * 0.85})`); // bounce reflection
-          radGrad.addColorStop(1, `rgba(4, 18, 2, ${opacity})`); // deep shadow edge
-        } else {
-          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-          radGrad.addColorStop(0.15, `rgba(215, 255, 125, ${opacity})`);
-          radGrad.addColorStop(0.35, `rgba(130, 210, 0, ${opacity * 0.95})`);
-          radGrad.addColorStop(0.55, `rgba(15, 50, 8, ${opacity * 0.95})`);
-          radGrad.addColorStop(0.8, `rgba(110, 195, 0, ${opacity * 0.85})`);
-          radGrad.addColorStop(1, `rgba(5, 20, 3, ${opacity})`);
-        }
-
-        ctx.fillStyle = radGrad;
-        ctx.fill();
+        if (p.z < 0) drawNode(p);
       });
 
-      // 4. Draw Foreground Particles (floating in front of the shape)
+      // 3. Draw furthest edges (avgZ < 0)
+      edgeData.forEach((edge) => {
+        if (edge.avgZ < 0) drawEdge(edge);
+      });
+
+      // 4. Draw Glowing Center Core (z = 0)
+      drawGlowingCore(centerX, centerY, focalLength);
+
+      // 5. Draw closest edges (avgZ >= 0)
+      edgeData.forEach((edge) => {
+        if (edge.avgZ >= 0) drawEdge(edge);
+      });
+
+      // 6. Draw closest nodes (z >= 0)
+      projected.forEach((p) => {
+        if (p.z >= 0) drawNode(p);
+      });
+
+      // 7. Draw Foreground Particles (floating in front of the shape)
       drawParticles('fg');
 
       animationFrameId = requestAnimationFrame(render);
@@ -343,7 +432,7 @@ export default function ThreeDBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full pointer-events-none z-[1] overflow-hidden select-none">
+    <div className="fixed inset-0 w-full h-full pointer-events-none z-[-1] overflow-hidden select-none">
       {/* Background Radial Glow Layer */}
       <div 
         ref={radialGlowRef}

@@ -59,49 +59,69 @@ export default function Services() {
   useEffect(() => {
     const activeTriggers = [];
 
-    // Reveal Heading elements staggered on scroll (staggered float in, uniform float out)
+    // Reveal Heading elements on scroll
     const headingElements = headingRef.current.children;
-    const headingTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: headingRef.current,
-        start: 'top bottom-=40',
-        end: 'bottom top+=40',
-        scrub: 0.8,
+    const headingTrigger = ScrollTrigger.create({
+      trigger: headingRef.current,
+      start: 'top bottom-=40',
+      end: 'bottom top+=40',
+      onEnter: () => {
+        gsap.fromTo(headingElements, 
+          { y: 40, opacity: 0 }, 
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', stagger: 0.1, overwrite: 'auto' }
+        );
+      },
+      onLeave: () => {
+        gsap.to(headingElements, 
+          { y: -40, opacity: 0, duration: 0.5, ease: 'power2.in', stagger: 0.05, overwrite: 'auto' }
+        );
+      },
+      onEnterBack: () => {
+        gsap.fromTo(headingElements, 
+          { y: 40, opacity: 0 }, 
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', stagger: 0.1, overwrite: 'auto' }
+        );
+      },
+      onLeaveBack: () => {
+        gsap.to(headingElements, 
+          { y: 40, opacity: 0, duration: 0.5, ease: 'power2.in', stagger: 0.05, overwrite: 'auto' }
+        );
       }
     });
 
-    headingTl.fromTo(headingElements,
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, ease: 'power2.out', stagger: 0.1, duration: 0.4 }
-    )
-    .to(headingElements,
-      { y: -40, opacity: 0, ease: 'power2.in', stagger: 0.1, duration: 0.4 },
-      '+=0.2'
-    );
-
-    if (headingTl.scrollTrigger) activeTriggers.push(headingTl.scrollTrigger);
+    activeTriggers.push(headingTrigger);
 
     // Staggered reveal & exit for cards
     cardRefs.current.forEach((card) => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: card,
-          start: 'top bottom-=60',
-          end: 'bottom top+=60',
-          scrub: 0.8,
+      const trigger = ScrollTrigger.create({
+        trigger: card,
+        start: 'top bottom-=60',
+        end: 'bottom top+=60',
+        onEnter: () => {
+          gsap.fromTo(card, 
+            { y: 50, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+          );
+        },
+        onLeave: () => {
+          gsap.to(card, 
+            { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+          );
+        },
+        onEnterBack: () => {
+          gsap.fromTo(card, 
+            { y: 50, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+          );
+        },
+        onLeaveBack: () => {
+          gsap.to(card, 
+            { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+          );
         }
       });
 
-      tl.fromTo(card,
-        { y: 70, opacity: 0 },
-        { y: 0, opacity: 1, ease: 'power2.out', duration: 0.4 }
-      )
-      .to(card,
-        { y: -70, opacity: 0, ease: 'power2.in', duration: 0.4 },
-        '+=0.2'
-      );
-
-      if (tl.scrollTrigger) activeTriggers.push(tl.scrollTrigger);
+      activeTriggers.push(trigger);
     });
 
     return () => {
@@ -126,7 +146,7 @@ export default function Services() {
       rotationX: -yc * 10,
       scale: 1.02,
       boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-      borderColor: 'rgba(186, 255, 57, 0.4)',
+      borderColor: 'rgba(255, 45, 55, 0.4)',
       ease: 'power1.out',
       duration: 0.3
     });
@@ -162,7 +182,7 @@ export default function Services() {
         
         {/* Section Heading */}
         <div ref={headingRef} className="max-w-xl flex flex-col gap-4">
-          <span className="text-xs font-semibold tracking-[0.25em] text-lime-600 dark:text-neon uppercase select-none">
+          <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
             What we do
           </span>
           <h2 className="text-4xl md:text-6xl font-display font-bold leading-none text-black dark:text-white uppercase select-none">
@@ -209,7 +229,7 @@ export default function Services() {
 
                   {/* Title & Tag */}
                   <div className="mb-8">
-                    <span className="text-[10px] tracking-wider uppercase font-semibold text-lime-700 dark:text-neon/80 bg-lime-100/70 dark:bg-neon/5 px-2 py-0.5 rounded-sm transition-theme">
+                    <span className="text-[10px] tracking-wider uppercase font-semibold text-red-700 dark:text-neon/80 bg-red-100/70 dark:bg-neon/5 px-2 py-0.5 rounded-sm transition-theme">
                       {card.tag}
                     </span>
                     <h3 className="text-2xl font-display font-semibold text-black dark:text-white mt-3 leading-tight select-none">
