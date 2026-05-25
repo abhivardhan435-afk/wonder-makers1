@@ -64,7 +64,7 @@ export default function Cursor() {
         });
         gsap.to(dotRef.current, {
           scale: 1.5,
-          backgroundColor: '#ffffff',
+          backgroundColor: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000',
           duration: 0.3,
           ease: 'power2.out'
         });
@@ -114,7 +114,7 @@ export default function Cursor() {
     <>
       <div 
         ref={dotRef} 
-        className="fixed top-0 left-0 w-2 h-2 rounded-full pointer-events-none z-[9999] mix-blend-difference bg-neon -translate-x-1/2 -translate-y-1/2"
+        className="fixed top-0 left-0 w-2 h-2 rounded-full pointer-events-none z-[9999] bg-neon -translate-x-1/2 -translate-y-1/2"
       />
       <div 
         ref={ringRef} 

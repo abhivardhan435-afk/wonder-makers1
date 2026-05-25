@@ -34,32 +34,59 @@ export default function ServicesPage() {
 
     // Apply scroll triggers to registered elements
     animateRefs.current.forEach((el) => {
+      const isCard = el.classList.contains('rounded-2xl');
+
       const trigger = ScrollTrigger.create({
         trigger: el,
         start: 'top bottom-=60',
         end: 'bottom top+=60',
         onEnter: () => {
-          gsap.fromTo(el, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
-          );
+          if (isCard) {
+            gsap.fromTo(el, 
+              { y: 55, opacity: 0, scale: 0.96 }, 
+              { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
+            );
+          } else {
+            gsap.fromTo(el, 
+              { y: 50, opacity: 0 }, 
+              { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            );
+          }
         },
         onLeave: () => {
-          gsap.to(el, 
-            { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
-          );
+          if (isCard) {
+            gsap.to(el, 
+              { y: -55, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
+            );
+          } else {
+            gsap.to(el, 
+              { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            );
+          }
         },
         onEnterBack: () => {
-          // Replace pan down with float in (slide up from 50)
-          gsap.fromTo(el, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
-          );
+          if (isCard) {
+            gsap.fromTo(el, 
+              { y: 55, opacity: 0, scale: 0.96 }, 
+              { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
+            );
+          } else {
+            gsap.fromTo(el, 
+              { y: 50, opacity: 0 }, 
+              { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            );
+          }
         },
         onLeaveBack: () => {
-          gsap.to(el, 
-            { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
-          );
+          if (isCard) {
+            gsap.to(el, 
+              { y: 55, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
+            );
+          } else {
+            gsap.to(el, 
+              { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            );
+          }
         }
       });
 
@@ -276,7 +303,7 @@ export default function ServicesPage() {
           ref={addToAnimateRefs} 
           className="flex flex-col gap-6 max-w-4xl"
         >
-          <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+          <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
             SERVICES & DELIVERABLES
           </span>
           <h1 className="text-5xl md:text-8xl font-display font-bold leading-none tracking-tight uppercase select-none">
@@ -294,25 +321,26 @@ export default function ServicesPage() {
               <div 
                 key={idx}
                 ref={addToAnimateRefs}
-                className="flex flex-col justify-between p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-red-500/35 dark:hover:border-neon/35 transition-all duration-500 group"
+                className="flex flex-col justify-between p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-neon/35 transition-all duration-500 group relative overflow-hidden"
               >
-                <div>
+                
+                <div className="relative z-10">
                   <div className="flex justify-between items-center mb-6">
                     <span className="text-xs font-display font-light text-neutral-400 dark:text-neutral-500">
                       {val.num}
                     </span>
-                    <span className="text-[10px] tracking-wider uppercase font-semibold text-red-700 dark:text-neon/80 bg-red-100/70 dark:bg-neon/5 px-2 py-0.5 rounded-sm">
+                    <span className="text-[10px] tracking-wider uppercase font-semibold text-neon bg-neon/10 px-2 py-0.5 rounded-sm">
                       {val.title}
                     </span>
                   </div>
-                  <h3 className="text-lg font-display font-bold mb-4 text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-neon transition-colors duration-300">
+                  <h3 className="text-lg font-display font-bold mb-4 text-black dark:text-white group-hover:text-neon transition-colors duration-300">
                     {val.value}
                   </h3>
                   <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400 mb-6">
                     {val.advantage}
                   </p>
                 </div>
-                <div>
+                <div className="relative z-10">
                   <h4 className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400 dark:text-neutral-500 mb-3">
                     Key Focus
                   </h4>
@@ -332,7 +360,7 @@ export default function ServicesPage() {
         {/* CORE CAPABILITIES */}
         <section className="flex flex-col gap-16">
           <div ref={addToAnimateRefs} className="max-w-2xl flex flex-col gap-4">
-            <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+            <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
               OUR CAPABILITIES
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase select-none">
@@ -350,10 +378,11 @@ export default function ServicesPage() {
                 <div 
                   key={idx}
                   ref={addToAnimateRefs}
-                  className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-red-500/35 dark:hover:border-neon/35 transition-all duration-500 group/cap"
+                  className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-neon/35 transition-all duration-500 group/cap relative overflow-hidden"
                 >
-                  <div className="flex gap-4 items-center mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-neon/10 border border-red-200 dark:border-neon/20 flex items-center justify-center text-red-600 dark:text-neon">
+                  
+                  <div className="flex gap-4 items-center mb-6 relative z-10">
+                    <div className="w-10 h-10 rounded-xl bg-neon/10 border border-neon/20 flex items-center justify-center text-neon">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-xl font-display font-bold text-black dark:text-white">
@@ -361,25 +390,25 @@ export default function ServicesPage() {
                     </h3>
                   </div>
 
-                  <p className="text-xs md:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 mb-6">
+                  <p className="text-xs md:text-sm leading-relaxed text-neutral-500 dark:text-neutral-400 mb-6 relative z-10">
                     {cap.desc}
                   </p>
 
-                  <div className="mb-6 flex-grow">
+                  <div className="mb-6 flex-grow relative z-10">
                     <h4 className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400 dark:text-neutral-500 mb-3">
                       Expertise Areas
                     </h4>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-300">
                       {cap.items.map((item, i) => (
                         <li key={i} className="flex gap-2 items-center">
-                          <Check className="w-3.5 h-3.5 text-red-600 dark:text-neon flex-shrink-0" />
+                          <Check className="w-3.5 h-3.5 text-neon flex-shrink-0" />
                           <span>{item}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div>
+                  <div className="relative z-10">
                     <h4 className="text-[10px] tracking-wider uppercase font-semibold text-neutral-400 dark:text-neutral-500 mb-3">
                       Technologies & Stack
                     </h4>
@@ -400,7 +429,7 @@ export default function ServicesPage() {
         {/* PROCESS SECTION */}
         <section className="flex flex-col gap-16">
           <div ref={addToAnimateRefs} className="max-w-2xl flex flex-col gap-4">
-            <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+            <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
               OUR PROCESS
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase select-none">
@@ -416,7 +445,7 @@ export default function ServicesPage() {
               <div 
                 key={idx}
                 ref={addToAnimateRefs}
-                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-red-500/35 dark:hover:border-neon/35 transition-all duration-500"
+                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-neon/35 transition-all duration-500"
               >
                 <span className="text-3xl font-display font-extrabold text-neutral-200 dark:text-neutral-800 mb-6">
                   {step.step}
@@ -435,7 +464,7 @@ export default function ServicesPage() {
         {/* ENGAGEMENT MODELS */}
         <section className="flex flex-col gap-16">
           <div ref={addToAnimateRefs} className="max-w-2xl flex flex-col gap-4">
-            <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+            <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
               PARTNERSHIP
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase select-none">
@@ -451,9 +480,10 @@ export default function ServicesPage() {
               <div 
                 key={idx}
                 ref={addToAnimateRefs}
-                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-red-500/35 dark:hover:border-neon/35 transition-all duration-500"
+                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-neon/35 transition-all duration-500 relative overflow-hidden group"
               >
-                <div className="flex justify-between items-center mb-6">
+                
+                <div className="flex justify-between items-center mb-6 relative z-10">
                   <span className="text-xl font-display font-bold text-black dark:text-white">
                     {model.title}
                   </span>
@@ -461,13 +491,13 @@ export default function ServicesPage() {
                     {model.num}
                   </span>
                 </div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 leading-relaxed">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 leading-relaxed relative z-10">
                   {model.desc}
                 </p>
-                <ul className="flex flex-col gap-3">
+                <ul className="flex flex-col gap-3 relative z-10">
                   {model.features.map((feat, i) => (
                     <li key={i} className="flex gap-2.5 items-center text-xs text-neutral-600 dark:text-neutral-300">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-neon" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-neon" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -480,7 +510,7 @@ export default function ServicesPage() {
         {/* CLIENT TESTIMONIALS */}
         <section className="flex flex-col gap-16">
           <div ref={addToAnimateRefs} className="max-w-2xl flex flex-col gap-4">
-            <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+            <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
               TESTIMONIALS
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-bold uppercase select-none">
@@ -493,13 +523,14 @@ export default function ServicesPage() {
               <div 
                 key={idx}
                 ref={addToAnimateRefs}
-                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm relative overflow-hidden"
+                className="flex flex-col p-8 rounded-2xl border border-black/8 dark:border-white/8 bg-neutral-100/40 dark:bg-neutral-900/10 backdrop-blur-sm hover:border-neon/35 transition-all duration-500 relative overflow-hidden group"
               >
-                <Quote className="w-16 h-16 text-black/5 dark:text-white/5 absolute -top-2 -left-2" />
-                <p className="text-sm md:text-base leading-relaxed text-neutral-600 dark:text-neutral-300 italic mb-8 relative z-10">
+                
+                <Quote className="w-16 h-16 text-black/5 dark:text-white/5 absolute -top-2 -left-2 z-10" />
+                <p className="text-sm md:text-base leading-relaxed text-neutral-600 dark:text-neutral-300 italic mb-8 relative z-20">
                   "{test.quote}"
                 </p>
-                <div className="mt-auto flex flex-col">
+                <div className="mt-auto flex flex-col relative z-20">
                   <span className="font-display font-bold text-sm text-black dark:text-white">
                     {test.author}
                   </span>

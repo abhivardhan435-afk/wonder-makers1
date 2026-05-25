@@ -59,24 +59,24 @@ export default function About() {
         end: 'bottom top+=50',
         onEnter: () => {
           gsap.fromTo(card, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            { y: 50, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
           );
         },
         onLeave: () => {
           gsap.to(card, 
-            { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: -50, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         },
         onEnterBack: () => {
           gsap.fromTo(card, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            { y: 50, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
           );
         },
         onLeaveBack: () => {
           gsap.to(card, 
-            { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: 50, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         }
       });
@@ -131,7 +131,7 @@ export default function About() {
     <section 
       id="about" 
       ref={containerRef}
-      className="relative w-full py-20 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-white/70 dark:bg-neutral-950/70 transition-theme overflow-hidden"
+      className="relative w-full py-20 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-transparent transition-theme overflow-hidden"
     >
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         

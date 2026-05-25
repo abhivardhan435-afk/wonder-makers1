@@ -99,24 +99,24 @@ export default function Services() {
         end: 'bottom top+=60',
         onEnter: () => {
           gsap.fromTo(card, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            { y: 55, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
           );
         },
         onLeave: () => {
           gsap.to(card, 
-            { y: -50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: -55, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         },
         onEnterBack: () => {
           gsap.fromTo(card, 
-            { y: 50, opacity: 0 }, 
-            { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', overwrite: 'auto' }
+            { y: 55, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' }
           );
         },
         onLeaveBack: () => {
           gsap.to(card, 
-            { y: 50, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: 55, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         }
       });
@@ -173,7 +173,7 @@ export default function Services() {
     <section 
       id="services" 
       ref={containerRef}
-      className="relative w-full py-24 md:py-32 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/40 transition-theme overflow-hidden"
+      className="relative w-full py-24 md:py-32 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-transparent transition-theme overflow-hidden"
     >
       {/* Mesh Background Accent Glow */}
       <div className="absolute top-1/2 left-0 w-[40vw] h-[40vw] rounded-full blur-[140px] pointer-events-none -z-10 opacity-15 bg-neon" />
@@ -182,7 +182,7 @@ export default function Services() {
         
         {/* Section Heading */}
         <div ref={headingRef} className="max-w-xl flex flex-col gap-4">
-          <span className="text-xs font-semibold tracking-[0.25em] text-red-600 dark:text-neon uppercase select-none">
+          <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
             What we do
           </span>
           <h2 className="text-4xl md:text-6xl font-display font-bold leading-none text-black dark:text-white uppercase select-none">
@@ -229,7 +229,7 @@ export default function Services() {
 
                   {/* Title & Tag */}
                   <div className="mb-8">
-                    <span className="text-[10px] tracking-wider uppercase font-semibold text-red-700 dark:text-neon/80 bg-red-100/70 dark:bg-neon/5 px-2 py-0.5 rounded-sm transition-theme">
+                    <span className="text-[10px] tracking-wider uppercase font-semibold text-neon bg-neon/10 px-2 py-0.5 rounded-sm transition-theme">
                       {card.tag}
                     </span>
                     <h3 className="text-2xl font-display font-semibold text-black dark:text-white mt-3 leading-tight select-none">

@@ -31,7 +31,7 @@ const projects = [
     tags: ['UX Design', 'Fine Diamonds', 'Shopify'],
     desc: 'A premium digital storefront featuring minimal typography and luxurious product showcases.',
     img: projectEppi,
-    accent: '#f59e0b', // Amber/gold
+    accent: 'var(--color-neon)',
     colSpan: 'col-span-12 md:col-span-5',
     offset: 'md:mt-20'
   },
@@ -42,7 +42,7 @@ const projects = [
     tags: ['Dashboard', 'AVAX Subnet', 'React'],
     desc: 'A high-performance portal featuring gaming tournaments, leaderboards, and telemetry logs.',
     img: projectAvalanche,
-    accent: '#ef4444', // Red
+    accent: 'var(--color-neon)',
     colSpan: 'col-span-12 md:col-span-5',
     offset: ''
   },
@@ -53,7 +53,7 @@ const projects = [
     tags: ['Console', 'Blockchain Node', 'Tailwind'],
     desc: 'An enterprise blockchain infrastructure console with interactive subnet configurations.',
     img: projectAvaCloud,
-    accent: '#8b5cf6', // Violet
+    accent: 'var(--color-neon)',
     colSpan: 'col-span-12 md:col-span-7',
     offset: 'md:mt-20'
   }
@@ -158,11 +158,12 @@ export default function Work() {
 
     const cards = gridRef.current.querySelectorAll('.project-card');
 
-    // Staggered fade out
+    // Staggered float out animation
     gsap.to(cards, {
-      y: 30,
+      y: -30,
+      scale: 0.96,
       opacity: 0,
-      duration: 0.3,
+      duration: 0.35,
       stagger: 0.05,
       ease: 'power2.in',
       onComplete: () => {
@@ -193,24 +194,24 @@ export default function Work() {
         end: 'bottom top+=80',
         onEnter: () => {
           gsap.fromTo(card, 
-            { y: 60, opacity: 0 }, 
-            { y: 0, opacity: 1, ease: 'power2.out', duration: 0.6, overwrite: 'auto' }
+            { y: 65, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, ease: 'power3.out', duration: 0.8, overwrite: 'auto' }
           );
         },
         onLeave: () => {
           gsap.to(card, 
-            { y: -60, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: -65, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         },
         onEnterBack: () => {
           gsap.fromTo(card, 
-            { y: 60, opacity: 0 }, 
-            { y: 0, opacity: 1, ease: 'power2.out', duration: 0.6, overwrite: 'auto' }
+            { y: 65, opacity: 0, scale: 0.96 }, 
+            { y: 0, opacity: 1, scale: 1, ease: 'power3.out', duration: 0.8, overwrite: 'auto' }
           );
         },
         onLeaveBack: () => {
           gsap.to(card, 
-            { y: 60, opacity: 0, duration: 0.5, ease: 'power2.in', overwrite: 'auto' }
+            { y: 65, opacity: 0, scale: 0.96, duration: 0.6, ease: 'power3.in', overwrite: 'auto' }
           );
         }
       });
@@ -280,14 +281,14 @@ export default function Work() {
     <section 
       id="work" 
       ref={containerRef}
-      className="relative w-full py-24 md:py-32 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/40 transition-theme overflow-hidden"
+      className="relative w-full py-24 md:py-32 px-6 md:px-12 border-b border-black/5 dark:border-white/5 bg-transparent transition-theme overflow-hidden"
     >
       <div className="max-w-7xl mx-auto flex flex-col gap-16">
         
         {/* Section Heading & Subtext */}
         <div ref={headingRef} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="max-w-xl flex flex-col gap-4">
-            <span className="text-xs font-semibold tracking-[0.25em] text-neutral-800 dark:text-neon uppercase select-none">
+            <span className="text-xs font-semibold tracking-[0.25em] text-neon uppercase select-none">
               Selected Works
             </span>
             <h2 className="text-4xl md:text-6xl font-display font-bold leading-none text-black dark:text-white uppercase select-none">
@@ -318,8 +319,8 @@ export default function Work() {
                 onClick={() => handleCategoryChange(cat)}
                 className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-wider transition-theme uppercase border interactive-hover active:scale-95 ${
                   isActive 
-                    ? 'bg-black text-white border-black dark:bg-neon dark:text-black dark:border-neon font-bold shadow-md shadow-neon/5'
-                    : 'bg-white/40 dark:bg-neutral-900/20 text-neutral-500 dark:text-neutral-400 border-black/10 dark:border-white/5 hover:text-black dark:hover:text-white hover:border-black/25 dark:hover:border-white/20'
+                    ? 'bg-neon text-black border-neon font-bold shadow-md shadow-neon/15'
+                    : 'bg-white/40 dark:bg-neutral-900/20 text-neutral-500 dark:text-neutral-400 border-black/10 dark:border-white/5 hover:text-neon hover:border-neon/30 dark:hover:text-white dark:hover:border-white/20'
                 }`}
               >
                 {cat}

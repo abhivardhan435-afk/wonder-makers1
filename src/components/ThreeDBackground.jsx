@@ -19,31 +19,52 @@ export default function ThreeDBackground() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Golden ratio for icosahedron
+    // Golden ratio for coordinates construction
     const phi = (1 + Math.sqrt(5)) / 2;
-    // 12 vertices of an icosahedron
-    const rawVertices = [
-      [-1,  phi,  0],
-      [ 1,  phi,  0],
-      [-1, -phi,  0],
-      [ 1, -phi,  0],
-      [ 0, -1,  phi],
-      [ 0,  1,  phi],
-      [ 0, -1, -phi],
-      [ 0,  1, -phi],
-      [ phi, 0, -1],
-      [ phi, 0,  1],
-      [-phi, 0, -1],
-      [-phi, 0,  1],
-    ];
+    const rawVertices = [];
 
-    // Normalize vertices and scale
+    // Helper to add cyclic permutations of a coordinate set
+    const addCyclicPermutations = (x, y, z) => {
+      rawVertices.push([x, y, z]);
+      rawVertices.push([y, z, x]);
+      rawVertices.push([z, x, y]);
+    };
+
+    // Construct the 60 vertices of a truncated icosahedron
+    const signs = [-1, 1];
+    
+    // 1. All cyclic permutations of (0, +-1, +-3*phi)
+    for (let s1 of signs) {
+      for (let s2 of signs) {
+        addCyclicPermutations(0, s1, s2 * 3 * phi);
+      }
+    }
+
+    // 2. All cyclic permutations of (+-1, +-(2 + phi), +-2*phi)
+    for (let s1 of signs) {
+      for (let s2 of signs) {
+        for (let s3 of signs) {
+          addCyclicPermutations(s1, s2 * (2 + phi), s3 * 2 * phi);
+        }
+      }
+    }
+
+    // 3. All cyclic permutations of (+-phi, +-2, +-(2*phi + 1))
+    for (let s1 of signs) {
+      for (let s2 of signs) {
+        for (let s3 of signs) {
+          addCyclicPermutations(s1 * phi, s2 * 2, s3 * (2 * phi + 1));
+        }
+      }
+    }
+
+    // Normalize vertices to project onto a unit sphere
     const vertices = rawVertices.map(([x, y, z]) => {
       const len = Math.sqrt(x*x + y*y + z*z);
       return [x / len, y / len, z / len];
     });
 
-    // Generate 30 edges based on distance
+    // Generate 90 edges based on uniform edge distance (distSq around 0.1628)
     const edges = [];
     for (let i = 0; i < vertices.length; i++) {
       for (let j = i + 1; j < vertices.length; j++) {
@@ -51,11 +72,81 @@ export default function ThreeDBackground() {
         const dy = vertices[i][1] - vertices[j][1];
         const dz = vertices[i][2] - vertices[j][2];
         const distSq = dx*dx + dy*dy + dz*dz;
-        if (Math.abs(distSq - 1.1) < 0.1) {
+        if (Math.abs(distSq - 0.1628) < 0.02) {
           edges.push([i, j]);
         }
       }
     }
+
+    // Neighbors adjacency list for cycle discovery
+    const neighbors = Array.from({ length: 60 }, () => []);
+    edges.forEach(([u, v]) => {
+      neighbors[u].push(v);
+      neighbors[v].push(u);
+    });
+
+    // Helper to find shortest path using BFS avoiding a node
+    function findShortestPath(start, target, avoid) {
+      const queue = [[start, [start]]];
+      const visited = new Set([start, avoid]);
+
+      while (queue.length > 0) {
+        const [curr, path] = queue.shift();
+        if (curr === target) return path;
+
+        for (let n of neighbors[curr]) {
+          if (!visited.has(n)) {
+            visited.add(n);
+            queue.push([n, [...path, n]]);
+          }
+        }
+      }
+      return null;
+    }
+
+    // Generate 32 faces (12 pentagons and 20 hexagons) dynamically using BFS cycles
+    const faces = [];
+    const faceKeys = new Set();
+
+    for (let i = 0; i < 60; i++) {
+      const nbs = neighbors[i];
+      if (nbs.length >= 3) {
+        const pairs = [
+          [nbs[0], nbs[1]],
+          [nbs[1], nbs[2]],
+          [nbs[2], nbs[0]]
+        ];
+
+        pairs.forEach(([j, k]) => {
+          const path = findShortestPath(k, j, i);
+          if (path) {
+            const cycle = [i, ...path];
+            const key = [...cycle].sort((a, b) => a - b).join(',');
+            if (!faceKeys.has(key)) {
+              faceKeys.add(key);
+              faces.push(cycle);
+            }
+          }
+        });
+      }
+    }
+
+    // Generate 128x128 noise pattern canvas programmatically
+    const noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = 128;
+    noiseCanvas.height = 128;
+    const noiseCtx = noiseCanvas.getContext('2d');
+    const noiseData = noiseCtx.createImageData(128, 128);
+    const d = noiseData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const val = Math.floor(Math.random() * 255);
+      d[i] = val;
+      d[i+1] = val;
+      d[i+2] = val;
+      d[i+3] = 255;
+    }
+    noiseCtx.putImageData(noiseData, 0, 0);
+    const noisePattern = ctx.createPattern(noiseCanvas, 'repeat');
 
     // Scroll mapping using GSAP
     const trigger = gsap.to(scrollProgress.current, {
@@ -68,6 +159,20 @@ export default function ThreeDBackground() {
         scrub: 1.2,
       },
     });
+
+
+
+    // Mouse movement tracking for particle parallax
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let currentMouseX = mouseX;
+    let currentMouseY = mouseY;
+
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
 
     // Particles for immersed look (dust/micro-refractions)
     const numParticles = 35;
@@ -82,6 +187,7 @@ export default function ThreeDBackground() {
         speedX: (Math.random() * 0.14 - 0.07),  // slow sideways drift
         opacity: Math.random() * 0.55 + 0.15,
         parallaxFactor: Math.random() * 0.75 + 0.25,
+        colorType: Math.random() > 0.5 ? 'white' : 'pink'
       });
     }
 
@@ -114,8 +220,8 @@ export default function ThreeDBackground() {
       // Check current theme
       const isDark = document.documentElement.classList.contains('dark');
 
-      // Smoothly LERP glow opacity based on active theme
-      const targetGlowOpacity = isDark ? 1.0 : 0.0;
+      // Smoothly LERP glow opacity (always active for red neon theme)
+      const targetGlowOpacity = 1.0;
       currentGlowOpacity += (targetGlowOpacity - currentGlowOpacity) * 0.08;
 
       // Only scroll-linked rotation (no idle rotation, no mouse rotation)
@@ -126,9 +232,17 @@ export default function ThreeDBackground() {
       // Responsive Size scale factor (larger on desktop, normalized on mobile)
       const focalLength = Math.min(width, height) * (width < 768 ? 0.78 : 0.92);
 
-      // Fixed center projection (no mouse offset shift to keep the shape perfectly centered)
+      // Smooth mouse interpolation for dust particles parallax
+      currentMouseX += (mouseX - currentMouseX) * 0.05;
+      currentMouseY += (mouseY - currentMouseY) * 0.05;
+
+      const mouseOffsetX = (currentMouseX - width / 2) * 0.05;
+      const mouseOffsetY = (currentMouseY - height / 2) * 0.05;
+      const scrollOffset = scrollProgress.current.value * -80; // Slow upward drift
+
+      // Fixed center projection with Scroll Y-Parallax
       const centerX = width / 2;
-      const centerY = height / 2;
+      const centerY = (height / 2) + (scrollProgress.current.value - 0.5) * -160;
 
       // Cosine and Sine values for rotation
       const cx = Math.cos(angleX), sx = Math.sin(angleX);
@@ -155,9 +269,9 @@ export default function ThreeDBackground() {
           if (p.x < -20) p.x = width + 20;
           if (p.x > width + 20) p.x = -20;
 
-          // Use particle positions directly (no cursor offset)
-          const px = p.x;
-          const py = p.y;
+          // Project with mouse and scroll parallax
+          const px = p.x + mouseOffsetX * p.parallaxFactor;
+          const py = p.y + (mouseOffsetY + scrollOffset) * p.parallaxFactor;
 
           // Calculate depth of field blur relative to focal plane (z = 0.2)
           const distFromFocus = Math.abs(p.z - 0.2);
@@ -166,98 +280,178 @@ export default function ThreeDBackground() {
           const sizeScale = 1 + distFromFocus * 2.8;
           const currentSize = p.size * sizeScale;
 
-          const baseOpacity = isDark ? 0.38 : 0.65;
-          const currentOpacity = (p.opacity * baseOpacity) / (1 + distFromFocus * 2.0);
+          if (!isDark) {
+            // Light Mode: Ambient white/pale-pink blurred dust particles
+            const baseOpacity = 0.55;
+            const currentOpacity = (p.opacity * baseOpacity) / (1 + distFromFocus * 2.0);
 
-          ctx.beginPath();
-          ctx.arc(px, py, currentSize, 0, Math.PI * 2);
+            ctx.beginPath();
+            ctx.arc(px, py, currentSize, 0, Math.PI * 2);
 
-          const grad = ctx.createRadialGradient(px, py, 0, px, py, currentSize);
-          if (isDark) {
-            grad.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity})`);
-            grad.addColorStop(0.35, `rgba(255, 45, 55, ${currentOpacity * 0.85})`);
-            grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+            const grad = ctx.createRadialGradient(px, py, 0, px, py, currentSize);
+            if (p.colorType === 'white') {
+              grad.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity})`);
+              grad.addColorStop(0.4, `rgba(255, 255, 255, ${currentOpacity * 0.7})`);
+              grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            } else {
+              grad.addColorStop(0, `rgba(255, 210, 220, ${currentOpacity})`);
+              grad.addColorStop(0.4, `rgba(255, 180, 195, ${currentOpacity * 0.6})`);
+              grad.addColorStop(1, 'rgba(255, 180, 195, 0)');
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
           } else {
-            grad.addColorStop(0, `rgba(255, 255, 255, ${currentOpacity})`);
-            grad.addColorStop(0.35, `rgba(255, 45, 55, ${currentOpacity * 0.85})`);
-            grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
-          }
+            // Dark Mode: Glowing saturated neon-red particles
+            const baseOpacity = 0.38;
+            const currentOpacity = (p.opacity * baseOpacity) / (1 + distFromFocus * 2.0);
 
-          ctx.fillStyle = grad;
-          ctx.fill();
+            ctx.beginPath();
+            ctx.arc(px, py, currentSize, 0, Math.PI * 2);
+
+            const grad = ctx.createRadialGradient(px, py, 0, px, py, currentSize);
+            grad.addColorStop(0, isDark ? `rgba(255, 255, 255, ${currentOpacity})` : `rgba(255, 45, 55, ${currentOpacity})`);
+            grad.addColorStop(0.35, isDark ? `rgba(255, 45, 55, ${currentOpacity * 0.85})` : `rgba(255, 90, 100, ${currentOpacity * 0.95})`);
+            grad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.fill();
+          }
         });
+      };
+
+      // Helper to draw a single glass face (pentagon or hexagon)
+      const drawFace = ({ points, avgZ }) => {
+        const depthPct = (avgZ + 1.0) / 2.0; // 0 to 1
+        const baseOpacity = isDark ? 0.35 : 0.65;
+        const opacity = (0.2 + depthPct * 0.8) * baseOpacity;
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.closePath();
+
+        // Calculate centroid
+        let sumX = 0;
+        let sumY = 0;
+        points.forEach(p => {
+          sumX += p.x;
+          sumY += p.y;
+        });
+        const cx = sumX / points.length;
+        const cy = sumY / points.length;
+
+        // Calculate radius as max distance from center to any point
+        let maxDistSq = 0;
+        points.forEach(p => {
+          const distSq = Math.pow(p.x - cx, 2) + Math.pow(p.y - cy, 2);
+          if (distSq > maxDistSq) maxDistSq = distSq;
+        });
+        const r = Math.sqrt(maxDistSq) * 1.5;
+
+        // Shift light source slightly top-left
+        const lx = cx - r * 0.3;
+        const ly = cy - r * 0.3;
+
+        const radGrad = ctx.createRadialGradient(lx, ly, r * 0.1, cx, cy, r);
+        if (isDark) {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity * 0.3})`); // white reflection highlight
+          radGrad.addColorStop(0.3, `rgba(255, 45, 55, ${opacity * 0.1})`);  // faint red body tint
+          radGrad.addColorStop(1, `rgba(255, 45, 55, ${opacity * 0.22})`);  // edge refraction glow
+        } else {
+          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity * 0.6})`); // strong white reflection highlight
+          radGrad.addColorStop(0.4, `rgba(255, 255, 255, ${opacity * 0.25})`); // clean white glass body
+          radGrad.addColorStop(0.8, `rgba(255, 45, 55, ${opacity * 0.12})`);  // soft neon red refraction tint
+          radGrad.addColorStop(1, `rgba(255, 45, 55, ${opacity * 0.25})`);  // edge refraction border glow
+        }
+        ctx.fillStyle = radGrad;
+        ctx.fill();
+
+        // Stroke thin crystal highlight borders
+        ctx.lineWidth = isDark ? 0.6 : 0.8;
+        ctx.strokeStyle = isDark
+          ? `rgba(255, 255, 255, ${opacity * 0.18})`
+          : `rgba(255, 255, 255, ${opacity * 0.45})`;
+        ctx.stroke();
       };
 
       // Helper to draw a single edge
       const drawEdge = ({ p1, p2, avgZ }) => {
         const depthPct = (avgZ + 1.0) / 2.0; // 0 to 1
         
-        const baseOpacity = isDark ? 0.60 : 0.85;
-        const opacityRange = isDark ? 0.40 : 0.15;
+        const baseOpacity = isDark ? 0.38 : 0.55;
+        const opacityRange = isDark ? 0.22 : 0.15;
         const opacity = baseOpacity + depthPct * opacityRange;
 
-        const baseWidth = isDark ? 1.0 : 1.8;
-        const widthRange = isDark ? 2.0 : 2.2;
+        const baseWidth = isDark ? 0.8 : 1.4;
+        const widthRange = isDark ? 1.5 : 1.8;
         const lineWidth = baseWidth + depthPct * widthRange;
 
-        // Stroke 1: Ambient Reflection / Outer Glow (Wide & vibrant glow halo)
+        // Stroke 1: Ambient Reflection / Outer Glow (Wide & vibrant glow halo) - both modes (neon)
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth + 7.5; // Balanced glow width
+        ctx.lineWidth = lineWidth + 2.5; // Subtler glow width
         ctx.strokeStyle = isDark 
-          ? `rgba(255, 60, 65, ${opacity * 0.52})` // Moderated brightness and opacity
-          : `rgba(255, 60, 65, ${opacity * 0.45})`;
+          ? `rgba(255, 45, 55, ${opacity * 0.20})` 
+          : `rgba(255, 45, 55, ${opacity * 0.40})`;
         ctx.stroke();
 
         // Stroke 2: Metallic Chrome Body (Linear gradient with terminator line)
         const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
         if (isDark) {
-          grad.addColorStop(0, `rgba(75, 8, 10, ${opacity * 0.8})`);
-          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
-          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
-          grad.addColorStop(0.55, `rgba(40, 4, 6, ${opacity * 0.8})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
-          grad.addColorStop(1, `rgba(75, 8, 10, ${opacity * 0.8})`);
+          // Neon red reflective metallic body for dark mode
+          grad.addColorStop(0, `rgba(45, 5, 6, ${opacity * 0.6})`);
+          grad.addColorStop(0.22, `rgba(255, 45, 55, ${opacity * 0.8})`);
+          grad.addColorStop(0.45, `rgba(255, 120, 130, ${opacity * 0.8})`); // Specular neon highlight
+          grad.addColorStop(0.55, `rgba(25, 2, 3, ${opacity * 0.6})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 45, 55, ${opacity * 0.8})`);
+          grad.addColorStop(1, `rgba(45, 5, 6, ${opacity * 0.6})`);
         } else {
-          grad.addColorStop(0, `rgba(90, 10, 12, ${opacity * 0.95})`);
-          grad.addColorStop(0.22, `rgba(255, 60, 65, ${opacity})`);
-          grad.addColorStop(0.45, `rgba(255, 255, 255, ${opacity})`); // Specular highlight
-          grad.addColorStop(0.55, `rgba(50, 3, 5, ${opacity * 0.95})`); // Horizon terminator line
-          grad.addColorStop(0.78, `rgba(255, 60, 65, ${opacity})`);
-          grad.addColorStop(1, `rgba(90, 10, 12, ${opacity * 0.95})`);
+          // Lighter neon red reflective metallic body for light mode (increased luminance)
+          grad.addColorStop(0, `rgba(70, 6, 8, ${opacity * 0.70})`);
+          grad.addColorStop(0.22, `rgba(255, 45, 55, ${opacity * 0.85})`);
+          grad.addColorStop(0.45, `rgba(255, 180, 190, ${opacity * 0.90})`); // Specular highlight
+          grad.addColorStop(0.55, `rgba(35, 3, 4, ${opacity * 0.70})`); // Horizon terminator line
+          grad.addColorStop(0.78, `rgba(255, 45, 55, ${opacity * 0.85})`);
+          grad.addColorStop(1, `rgba(70, 6, 8, ${opacity * 0.70})`);
         }
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth + 0.8;
+        ctx.lineWidth = lineWidth + 0.5;
         ctx.strokeStyle = grad;
         ctx.stroke();
 
-        // Stroke 3: Specular core line (Ultra-thin white reflect line)
+        // Stroke 3: Specular core line (Ultra-thin reflect line)
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.lineWidth = lineWidth * 0.35;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.lineWidth = lineWidth * 0.28;
+        ctx.strokeStyle = isDark 
+          ? `rgba(255, 60, 65, ${opacity * 0.85})` // Neon red core line
+          : `rgba(255, 80, 85, ${opacity * 0.75})`;
         ctx.stroke();
       };
 
       // Helper to draw a single node (vertex)
       const drawNode = (p) => {
         const depthPct = (p.z + 1.0) / 2.0;
-        const radius = isDark ? (4.0 + depthPct * 4.5) : (4.5 + depthPct * 5.0);
-        const baseOpacity = isDark ? 0.80 : 0.90;
-        const opacityRange = isDark ? 0.20 : 0.10;
+        const radius = isDark ? (3.2 + depthPct * 3.8) : (3.6 + depthPct * 4.2); // Reduced node sizes slightly
+        const baseOpacity = isDark ? 0.50 : 0.65;
+        const opacityRange = isDark ? 0.15 : 0.10;
         const opacity = baseOpacity + depthPct * opacityRange;
 
-        // Draw soft ambient vector glow behind node
+        // Draw soft ambient vector glow behind node - both modes (neon)
         ctx.beginPath();
-        ctx.arc(p.x, p.y, radius * 2.8, 0, Math.PI * 2); // Balanced node glow radius
-        ctx.fillStyle = isDark
-          ? `rgba(255, 60, 65, ${opacity * 0.65})` // Moderated brightness and opacity
-          : `rgba(255, 60, 65, ${opacity * 0.50})`;
+        ctx.arc(p.x, p.y, radius * 3.5, 0, Math.PI * 2); // Increased node glow radius for glowing end points
+        const nodeGlowGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 3.5);
+        nodeGlowGrad.addColorStop(0, isDark ? `rgba(255, 45, 55, ${opacity * 0.50})` : `rgba(255, 45, 55, ${opacity * 0.60})`);
+        nodeGlowGrad.addColorStop(0.35, isDark ? `rgba(255, 45, 55, ${opacity * 0.18})` : `rgba(255, 45, 55, ${opacity * 0.26})`);
+        nodeGlowGrad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+        ctx.fillStyle = nodeGlowGrad;
         ctx.fill();
 
         // Draw metallic chrome node
@@ -271,84 +465,151 @@ export default function ThreeDBackground() {
         );
         
         if (isDark) {
-          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
-          radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // specular rim
-          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
-          radGrad.addColorStop(0.55, `rgba(50, 5, 8, ${opacity * 0.95})`); // dark horizon reflection terminator
-          radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
-          radGrad.addColorStop(1, `rgba(30, 2, 3, ${opacity})`); // deep shadow edge
+          radGrad.addColorStop(0, `rgba(255, 120, 130, ${opacity * 0.95})`); // Neon red core highlight
+          radGrad.addColorStop(0.15, `rgba(255, 60, 70, ${opacity * 0.95})`); // Neon red rim
+          radGrad.addColorStop(0.35, `rgba(255, 45, 55, ${opacity * 0.8})`); // bright red body
+          radGrad.addColorStop(0.55, `rgba(40, 5, 6, ${opacity * 0.8})`); // dark horizon reflection terminator
+          radGrad.addColorStop(0.8, `rgba(255, 100, 110, ${opacity * 0.7})`); // bounce reflection
+          radGrad.addColorStop(1, `rgba(20, 2, 3, ${opacity * 0.85})`); // deep shadow edge
         } else {
-          radGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // core specular highlight
-          radGrad.addColorStop(0.15, `rgba(255, 220, 225, ${opacity})`); // slightly darker red-white rim
-          radGrad.addColorStop(0.35, `rgba(255, 60, 65, ${opacity * 0.95})`); // bright red body
-          radGrad.addColorStop(0.55, `rgba(60, 6, 10, ${opacity * 0.95})`); // dark horizon reflection terminator
-          radGrad.addColorStop(0.8, `rgba(255, 120, 130, ${opacity * 0.85})`); // bounce reflection
-          radGrad.addColorStop(1, `rgba(40, 4, 6, ${opacity})`); // deep shadow edge
+          // Neon red chrome node for light mode
+          radGrad.addColorStop(0, `rgba(255, 200, 205, ${opacity * 0.95})`); // core highlight
+          radGrad.addColorStop(0.15, `rgba(255, 120, 130, ${opacity * 0.95})`); // rim
+          radGrad.addColorStop(0.35, `rgba(255, 45, 55, ${opacity * 0.85})`); // bright red body
+          radGrad.addColorStop(0.55, `rgba(40, 5, 6, ${opacity * 0.75})`); // horizon reflection
+          radGrad.addColorStop(0.8, `rgba(255, 140, 150, ${opacity * 0.8})`); // bounce reflection
+          radGrad.addColorStop(1, `rgba(30, 3, 4, ${opacity * 0.8})`); // deep shadow
         }
 
         ctx.fillStyle = radGrad;
         ctx.fill();
       };
 
-      // Helper to draw glowing core inside shape
+      // Helper to draw glowing core or refractive glass sphere inside shape
       const drawGlowingCore = (cx, cy, focal) => {
         if (currentGlowOpacity < 0.01) return;
 
-        // Pulse breathing effect based on timestamp
-        const pulse = 1 + Math.sin(time * 0.003) * 0.08;
-        const coreRadius = focal * 0.38 * pulse; // Slightly decreased center core size
-        
-        // Layer 1: Outer soft ambient glow (wide, low opacity)
-        ctx.beginPath();
-        ctx.arc(cx, cy, coreRadius * 2.6, 0, Math.PI * 2);
-        let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.6);
         if (isDark) {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.45 * currentGlowOpacity})`); // Moderated outer glow opacity
-          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.15 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          // Pulse breathing effect based on timestamp in Dark Mode
+          const pulse = 1 + Math.sin(time * 0.003) * 0.08;
+          const coreRadius = focal * 0.25 * pulse;
+          
+          ctx.beginPath();
+          ctx.arc(cx, cy, coreRadius * 2.8, 0, Math.PI * 2);
+          let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 2.8);
+          
+          grad.addColorStop(0, `rgba(255, 255, 255, ${1.0 * currentGlowOpacity})`);
+          grad.addColorStop(0.08, `rgba(255, 240, 200, ${0.92 * currentGlowOpacity})`);
+          grad.addColorStop(0.18, `rgba(255, 150, 50, ${0.78 * currentGlowOpacity})`);
+          grad.addColorStop(0.32, `rgba(255, 45, 55, ${0.58 * currentGlowOpacity})`);
+          grad.addColorStop(0.55, `rgba(200, 20, 30, ${0.28 * currentGlowOpacity})`);
+          grad.addColorStop(0.80, `rgba(130, 5, 10, ${0.08 * currentGlowOpacity})`);
+          grad.addColorStop(1, 'rgba(130, 5, 10, 0)');
+          
+          ctx.fillStyle = grad;
+          ctx.fill();
         } else {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.35 * currentGlowOpacity})`);
-          grad.addColorStop(0.5, `rgba(255, 60, 65, ${0.10 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
-        }
-        ctx.fillStyle = grad;
-        ctx.fill();
+          // Refractive Glass Sphere in Light Mode
+          const sphereRadius = focal * 0.16;
 
-        // Layer 2: Medium glow body (intense color)
-        ctx.beginPath();
-        ctx.arc(cx, cy, coreRadius * 1.3, 0, Math.PI * 2);
-        grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 1.3);
-        if (isDark) {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.68 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.48 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.20 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
-        } else {
-          grad.addColorStop(0, `rgba(255, 60, 65, ${0.58 * currentGlowOpacity})`);
-          grad.addColorStop(0.3, `rgba(255, 60, 65, ${0.40 * currentGlowOpacity})`);
-          grad.addColorStop(0.7, `rgba(255, 60, 65, ${0.15 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
-        }
-        ctx.fillStyle = grad;
-        ctx.fill();
+          // 1. Ambient soft back glow
+          ctx.beginPath();
+          ctx.arc(cx, cy, sphereRadius * 1.5, 0, Math.PI * 2);
+          const outerGlow = ctx.createRadialGradient(cx, cy, sphereRadius * 0.9, cx, cy, sphereRadius * 1.5);
+          outerGlow.addColorStop(0, 'rgba(255, 45, 55, 0.08)');
+          outerGlow.addColorStop(1, 'rgba(255, 45, 55, 0)');
+          ctx.fillStyle = outerGlow;
+          ctx.fill();
 
-        // Layer 3: Specular bright center core (white-hot center)
-        ctx.beginPath();
-        ctx.arc(cx, cy, coreRadius * 0.45, 0, Math.PI * 2);
-        grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius * 0.45);
-        if (isDark) {
-          grad.addColorStop(0, `rgba(255, 255, 255, ${0.98 * currentGlowOpacity})`);
-          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.80 * currentGlowOpacity})`);
-          grad.addColorStop(0.85, `rgba(255, 60, 65, ${0.40 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
-        } else {
-          grad.addColorStop(0, `rgba(255, 255, 255, ${0.95 * currentGlowOpacity})`);
-          grad.addColorStop(0.4, `rgba(255, 255, 255, ${0.75 * currentGlowOpacity})`);
-          grad.addColorStop(0.85, `rgba(255, 60, 65, ${0.30 * currentGlowOpacity})`);
-          grad.addColorStop(1, 'rgba(255, 60, 65, 0)');
+          // 2. Main Glass Body (Refractive transparency + volume shadow)
+          ctx.beginPath();
+          ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
+          const bodyGrad = ctx.createRadialGradient(
+            cx - sphereRadius * 0.15, cy - sphereRadius * 0.15, sphereRadius * 0.1,
+            cx, cy, sphereRadius
+          );
+          bodyGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');      // Light passing straight through
+          bodyGrad.addColorStop(0.5, 'rgba(255, 240, 242, 0.25)');    // Glass body volume
+          bodyGrad.addColorStop(0.85, 'rgba(255, 210, 215, 0.12)');   // Refracted pink tint
+          bodyGrad.addColorStop(1, 'rgba(255, 180, 185, 0.35)');     // Thick dark edge reflection
+          ctx.fillStyle = bodyGrad;
+          ctx.fill();
+
+          // 3. Bottom-Right Caustic Focus (Focused light on opposite side)
+          ctx.beginPath();
+          ctx.arc(cx + sphereRadius * 0.35, cy + sphereRadius * 0.35, sphereRadius * 0.45, 0, Math.PI * 2);
+          const causticGrad = ctx.createRadialGradient(
+            cx + sphereRadius * 0.4, cy + sphereRadius * 0.4, 0,
+            cx + sphereRadius * 0.35, cy + sphereRadius * 0.35, sphereRadius * 0.45
+          );
+          causticGrad.addColorStop(0, 'rgba(255, 120, 135, 0.45)');   // Sharp bright caustic focus
+          causticGrad.addColorStop(0.3, 'rgba(255, 45, 55, 0.18)');   // Soft caustic spill
+          causticGrad.addColorStop(1, 'rgba(255, 45, 55, 0)');
+          ctx.fillStyle = causticGrad;
+          ctx.fill();
+
+          // 4. Horizon Terminator Curve (Curved reflection inside sphere)
+          ctx.beginPath();
+          ctx.arc(cx, cy + sphereRadius * 0.15, sphereRadius * 0.95, 0.15 * Math.PI, 0.85 * Math.PI, false);
+          ctx.lineWidth = 1.0;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.stroke();
+
+          // 5. Fresnel Inner Rim reflection (White border highlight)
+          ctx.beginPath();
+          ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
+          const rimGrad = ctx.createRadialGradient(cx, cy, sphereRadius * 0.78, cx, cy, sphereRadius);
+          rimGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          rimGrad.addColorStop(0.85, 'rgba(255, 255, 255, 0.18)');
+          rimGrad.addColorStop(1, 'rgba(255, 255, 255, 0.65)');       // Bright white halo edge
+          ctx.fillStyle = rimGrad;
+          ctx.fill();
+
+          // 6. Chromatic Aberration Rim (Fringe dispersion)
+          ctx.beginPath();
+          ctx.arc(cx - 0.8, cy - 0.8, sphereRadius, 0, Math.PI * 2);
+          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = 'rgba(0, 220, 255, 0.38)';                // Cyan fringe
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(cx + 0.8, cy + 0.8, sphereRadius, 0, Math.PI * 2);
+          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = 'rgba(255, 45, 55, 0.38)';                // Red/pink fringe
+          ctx.stroke();
+
+          // 7. Primary Specular Highlight (Sharp top-left glare)
+          ctx.beginPath();
+          ctx.arc(cx - sphereRadius * 0.38, cy - sphereRadius * 0.38, sphereRadius * 0.22, 0, Math.PI * 2);
+          const specularGrad = ctx.createRadialGradient(
+            cx - sphereRadius * 0.44, cy - sphereRadius * 0.44, 0,
+            cx - sphereRadius * 0.38, cy - sphereRadius * 0.38, sphereRadius * 0.22
+          );
+          specularGrad.addColorStop(0, 'rgba(255, 255, 255, 0.90)');   // Glare core
+          specularGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.50)');  // Specular body
+          specularGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = specularGrad;
+          ctx.fill();
+
+          // 8. Secondary Pinpoint Specular Highlight (Sharp tiny glare reflection)
+          ctx.beginPath();
+          ctx.arc(cx - sphereRadius * 0.15, cy - sphereRadius * 0.45, sphereRadius * 0.08, 0, Math.PI * 2);
+          const pinGrad = ctx.createRadialGradient(
+            cx - sphereRadius * 0.17, cy - sphereRadius * 0.47, 0,
+            cx - sphereRadius * 0.15, cy - sphereRadius * 0.45, sphereRadius * 0.08
+          );
+          pinGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+          pinGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = pinGrad;
+          ctx.fill();
+
+          // 9. Sharp Crystal Outline (Outer border)
+          ctx.beginPath();
+          ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.stroke();
         }
-        ctx.fillStyle = grad;
-        ctx.fill();
       };
 
       // 1. Draw Background Particles (submerged deep behind shape)
@@ -387,8 +648,25 @@ export default function ThreeDBackground() {
         return { v1, v2, p1, p2, avgZ };
       });
 
-      // Sort edges: draw furthest edges first, closest edges last
+      // Map faces to project depth for Painter's Algorithm sorting
+      const faceData = faces.map((vertexIndices) => {
+        const points = vertexIndices.map(idx => projected[idx]);
+        let sumZ = 0;
+        points.forEach(p => {
+          sumZ += p.z;
+        });
+        const avgZ = sumZ / points.length;
+        return { points, avgZ };
+      });
+
+      // Sort edges and faces: draw furthest first, closest last
       edgeData.sort((a, b) => a.avgZ - b.avgZ);
+      faceData.sort((a, b) => a.avgZ - b.avgZ);
+
+      // 1.5 Draw furthest faces (avgZ < 0)
+      faceData.forEach((face) => {
+        if (face.avgZ < 0) drawFace(face);
+      });
 
       // 2. Draw furthest nodes (z < 0)
       projected.forEach((p) => {
@@ -403,6 +681,11 @@ export default function ThreeDBackground() {
       // 4. Draw Glowing Center Core (z = 0)
       drawGlowingCore(centerX, centerY, focalLength);
 
+      // 4.5 Draw closest faces (avgZ >= 0)
+      faceData.forEach((face) => {
+        if (face.avgZ >= 0) drawFace(face);
+      });
+
       // 5. Draw closest edges (avgZ >= 0)
       edgeData.forEach((edge) => {
         if (edge.avgZ >= 0) drawEdge(edge);
@@ -416,6 +699,17 @@ export default function ThreeDBackground() {
       // 7. Draw Foreground Particles (floating in front of the shape)
       drawParticles('fg');
 
+      // 8. Shimmering Tactile Grain Overlay
+      ctx.save();
+      ctx.globalAlpha = isDark ? 0.022 : 0.045; // Subtly transparent grain overlay
+      ctx.globalCompositeOperation = 'source-over';
+      const noiseOffsetX = Math.floor(Math.random() * 128);
+      const noiseOffsetY = Math.floor(Math.random() * 128);
+      ctx.translate(noiseOffsetX, noiseOffsetY);
+      ctx.fillStyle = noisePattern;
+      ctx.fillRect(-128, -128, width + 128, height + 128);
+      ctx.restore();
+
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -424,6 +718,8 @@ export default function ThreeDBackground() {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+
       if (trigger.scrollTrigger) {
         trigger.scrollTrigger.kill();
       }
@@ -436,8 +732,15 @@ export default function ThreeDBackground() {
       {/* Background Radial Glow Layer */}
       <div 
         ref={radialGlowRef}
-        className="absolute inset-0 radial-mesh opacity-40 dark:opacity-30 mix-blend-screen dark:mix-blend-normal transition-theme duration-700" 
+        className="absolute inset-0 radial-mesh opacity-40 dark:opacity-30 mix-blend-multiply dark:mix-blend-normal transition-theme duration-700" 
       />
+
+      {/* Corner Gradient Mesh in Light Mode */}
+      <div className="absolute inset-0 corner-mesh-tr opacity-100 dark:opacity-0 transition-opacity duration-700 pointer-events-none" />
+      <div className="absolute inset-0 corner-mesh-bl opacity-100 dark:opacity-0 transition-opacity duration-700 pointer-events-none" />
+
+
+
       <canvas 
         ref={canvasRef} 
         className="w-full h-full opacity-100 dark:opacity-95 transition-opacity duration-700"

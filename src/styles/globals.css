@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-neon: hsl(358, 99%, 55%);
+  --color-neon: hsl(358, 99%, 55%); /* Neon Red */
   --color-neon-hover: hsl(358, 99%, 45%);
   --color-neon-glow: rgba(255, 45, 55, 0.15);
   
@@ -88,10 +88,16 @@ html.lenis body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  opacity: 0.035;
+  opacity: 0.025;
   pointer-events: none;
   z-index: 9999;
+  mix-blend-mode: multiply;
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.dark .noise-overlay {
+  opacity: 0.015;
+  mix-blend-mode: screen;
 }
 
 /* Text Masking Reveal */
@@ -137,5 +143,111 @@ html.lenis body {
 /* Glow gradient mesh background - Red & White Neon */
 .radial-mesh {
   background-image: 
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 45, 55, 0.08) 35%, transparent 70%);
+    radial-gradient(circle at 50% 50%, rgba(255, 45, 55, 0.12) 0%, rgba(255, 45, 55, 0.05) 35%, transparent 70%);
+}
+.dark .radial-mesh {
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(255, 45, 55, 0.15) 0%, rgba(255, 45, 55, 0.08) 35%, transparent 70%);
+}
+
+/* Tactile glass plate style */
+.glass-plate {
+  position: absolute;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(16px) saturate(110%);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.dark .glass-plate {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 
+    0 25px 45px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Glass noise grain texture overlay */
+.glass-plate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 36px;
+  opacity: 0.055;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Abstract Glass Card Decoration 1 - Rotated Rectangle */
+.glass-card-decor-1 {
+  background: rgba(255, 192, 203, 0.06);
+  border: 1px solid rgba(255, 182, 193, 0.22);
+  backdrop-filter: blur(12px) saturate(120%);
+  border-radius: 24px;
+  transform: rotate(-6deg);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.02),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Abstract Glass Card Decoration 2 - Rotated Rectangle */
+.glass-card-decor-2 {
+  background: rgba(255, 200, 210, 0.05);
+  border: 1px solid rgba(255, 182, 193, 0.18);
+  backdrop-filter: blur(16px) saturate(110%);
+  border-radius: 24px;
+  transform: rotate(4deg);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.02),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Silky Fabric Highlight animation & overlay */
+@keyframes silkyShimmer {
+  0% {
+    transform: translate(-50%, -50%) rotate(35deg) translateY(-100%);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(35deg) translateY(100%);
+  }
+}
+
+.silky-reflection-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent 35%,
+    rgba(255, 255, 255, 0.08) 47%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.08) 53%,
+    transparent 65%
+  );
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  animation: silkyShimmer 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Corner Meshes for environmental edge depth */
+.corner-mesh-tr {
+  background: radial-gradient(circle at 100% 0%, rgba(255, 127, 100, 0.09) 0%, transparent 65%);
+}
+
+.corner-mesh-bl {
+  background: radial-gradient(circle at 0% 100%, rgba(255, 100, 150, 0.12) 0%, transparent 65%);
+}
+
+/* Premium elevation button shadows */
+.premium-btn-shadow {
+  box-shadow: 0 10px 40px rgba(255, 70, 70, 0.14) !important;
+}
+.dark .premium-btn-shadow {
+  box-shadow: 0 10px 40px rgba(255, 45, 55, 0.16) !important;
 }

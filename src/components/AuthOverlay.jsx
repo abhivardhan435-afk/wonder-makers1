@@ -65,7 +65,7 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
           {/* Header row with logo and close button */}
           <div className="flex justify-between items-center mb-10">
             <div className="flex items-center gap-2">
-              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-red-600 dark:text-neon">
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-neon">
                 <path fillRule="evenodd" clipRule="evenodd" d="M24 11.5C22.4731 11.5001 20.961 11.3267 19.5503 10.7425C18.1395 10.1582 16.8577 9.30173 15.778 8.22201C14.6983 7.1423 13.8418 5.86046 13.2576 4.44972C12.6733 3.03897 12.4999 1.52695 12.5 0H11.5C11.5002 1.52683 11.3252 3.03875 10.741 4.44942C10.1569 5.86009 9.30065 7.14188 8.2211 8.22159C7.14154 9.3013 5.85988 10.1578 4.44929 10.7421C3.03871 11.3265 1.52683 11.5 0 11.5V12.5C1.52672 12.4997 3.03855 12.6752 4.44912 13.2593C5.8597 13.8434 7.14138 14.6997 8.22096 15.7792C9.30054 16.8587 10.1569 18.1404 10.741 19.5509C11.3252 20.9615 11.5002 22.4733 11.5 24H12.5C12.4999 22.4732 12.6738 20.9613 13.2581 19.5508C13.8424 18.1402 14.6988 16.8585 15.7785 15.779C16.8582 14.6994 18.14 13.8432 19.5506 13.2591C20.9613 12.6751 22.4732 12.4996 24 12.5V11.5Z" fill="currentColor" />
               </svg>
               <span className="font-display font-bold text-sm tracking-tight text-black dark:text-white uppercase">
@@ -132,7 +132,7 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
                   placeholder="Full Name" 
                   value={signUpName}
                   onChange={(e) => setSignUpName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-red-500 dark:focus:border-neon focus:ring-1 focus:ring-red-500 dark:focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                  className="w-full pl-11 pr-4 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
                 />
               </div>
             )}
@@ -147,7 +147,7 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
                 placeholder="Email Address" 
                 value={activeTab === 'login' ? loginEmail : signUpEmail}
                 onChange={(e) => activeTab === 'login' ? setLoginEmail(e.target.value) : setSignUpEmail(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-red-500 dark:focus:border-neon focus:ring-1 focus:ring-red-500 dark:focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                className="w-full pl-11 pr-4 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
                 placeholder="Password" 
                 value={activeTab === 'login' ? loginPassword : signUpPassword}
                 onChange={(e) => activeTab === 'login' ? setLoginPassword(e.target.value) : setSignUpPassword(e.target.value)}
-                className="w-full pl-11 pr-11 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-red-500 dark:focus:border-neon focus:ring-1 focus:ring-red-500 dark:focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+                className="w-full pl-11 pr-11 py-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon text-sm text-black dark:text-white transition-all duration-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
               />
               <button 
                 type="button"
@@ -184,14 +184,14 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
                   />
                   <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
                     rememberMe 
-                      ? 'bg-red-600 border-red-600 dark:bg-neon dark:border-neon text-white dark:text-black' 
+                      ? 'bg-neon border-neon text-white dark:text-black' 
                       : 'border-neutral-300 dark:border-neutral-800'
                   }`}>
                     {rememberMe && <Check className="w-2.5 h-2.5 stroke-[3px]" />}
                   </div>
                   <span>Remember me</span>
                 </label>
-                <a href="#/forgot-password" className="text-red-600 dark:text-neon hover:underline font-medium">
+                <a href="#/forgot-password" className="text-neon hover:underline font-medium">
                   Forgot Password?
                 </a>
               </div>
@@ -207,13 +207,13 @@ export default function AuthOverlay({ isOpen, activeTab, onClose, onTabChange })
                   />
                   <div className={`w-4 h-4 rounded border flex items-center justify-center mt-0.5 flex-shrink-0 transition-all ${
                     agreeTerms 
-                      ? 'bg-red-600 border-red-600 dark:bg-neon dark:border-neon text-white dark:text-black' 
+                      ? 'bg-neon border-neon text-white dark:text-black' 
                       : 'border-neutral-300 dark:border-neutral-800'
                   }`}>
                     {agreeTerms && <Check className="w-2.5 h-2.5 stroke-[3px]" />}
                   </div>
                   <span className="leading-tight">
-                    I agree to the <a href="#/terms" className="text-red-600 dark:text-neon hover:underline font-medium">Terms</a> and <a href="#/privacy" className="text-red-600 dark:text-neon hover:underline font-medium">Privacy Policy</a>
+                    I agree to the <a href="#/terms" className="text-neon hover:underline font-medium">Terms</a> and <a href="#/privacy" className="text-neon hover:underline font-medium">Privacy Policy</a>
                   </span>
                 </label>
               </div>
